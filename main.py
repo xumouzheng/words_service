@@ -93,8 +93,9 @@ def getUserTask(username):
         for row in result:
             print(index,row)
             for i in range (int(row[0]),int(row[1])):
-                lists['data'+str(index)]=allWords[i]
+                lists['data'+str(index)].append(allWords[i])
             index=index+1
+        # print(lists)
         return lists
     else:
         return "error"
@@ -115,9 +116,10 @@ def save_token(username,token):
 
 def check_token():
     authorization= request.headers.get('Authorization')
-    if authorization=="test":    # 临时调试接口使用
+    if authorization=="ricky.test":    # 临时调试接口使用
         return "ricky"
     data=authorization.split(".")
+    print(data,tokenList)
     if data[0] not in tokenList:
         return 0
     if tokenList[data[0]]==data[1]:
@@ -140,14 +142,18 @@ def test():
     print(lists)
 
 
+
+def response(data,status):
+    return {"data":data,"status":status}
+
 # login
 class Login(Resource):
     def post(self):
         args = loginer.parse_args()
         if args['password']==passwordMd5(args['username']):
-            return create_token(args['username'])
+            return response(create_token(args['username']),"ok")
         else: 
-            return "error"
+            return response("","error")
 
 WordsList_args=reqparse.RequestParser()
 WordsList_args.add_argument('start')
@@ -174,10 +180,11 @@ class WordsList(Resource):
 class GetTasks(Resource):
     def get(self):
         username=check_token()
+        print(username)
         if username:
-            return getUserTask(username)
+            return response(getUserTask(username),"ok")
         else:
-            return 'error'
+            return response("",'error')
 
 # 每天定时程序调用，创建当天所有用户的任务数据
 class CreateTask(Resource):
@@ -188,9 +195,9 @@ class CreateTask(Resource):
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(Login, '/login')
-api.add_resource(WordsList, '/wordslist')
-api.add_resource(GetTasks, '/getTasks')
+api.add_resource(Login, '/api/login')
+api.add_resource(WordsList, '/api/wordslist')
+api.add_resource(GetTasks, '/api/getTasks')
 api.add_resource(CreateTask, '/createTask')
 
 
